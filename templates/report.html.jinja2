@@ -1,0 +1,59 @@
+{% autoescape true %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Rapport ATS{% if report.candidate_name %} - {{ report.candidate_name }}{% endif %}</title>
+</head>
+<body>
+  <h1>Rapport d'analyse ATS</h1>
+  {% if report.candidate_name %}<p>Candidat : {{ report.candidate_name }}</p>{% endif %}
+
+  <h2>Score global : {{ "%.1f"|format(report.score.total) }}/100</h2>
+  <ul>
+    {% for line in report.score.explain() %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Compétences</h2>
+  <h3>Trouvées ({{ report.match.matched|length }})</h3>
+  <ul>
+    {% for m in report.match.matched %}<li>{{ m.label }}</li>{% endfor %}
+  </ul>
+  <h3>Manquantes ({{ report.match.missing|length }})</h3>
+  <ul>
+    {% for m in report.match.missing %}<li>{{ m.label }}</li>{% endfor %}
+  </ul>
+  <h3>Hors périmètre de l'offre ({{ report.match.extra|length }})</h3>
+  <ul>
+    {% for m in report.match.extra %}<li>{{ m.label }}</li>{% endfor %}
+  </ul>
+  {% if report.match.fuzzy_candidates %}
+  <h3>À vérifier manuellement</h3>
+  <ul>
+    {% for c in report.match.fuzzy_candidates %}
+    <li>{{ c.offer_term }} ~ {{ c.cv_term }} ({{ "%.0f"|format(c.score) }}%)</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h2>Lisibilité par les ATS (recommandations, jamais appliquées automatiquement)</h2>
+  <ul>
+    {% for issue in report.parseability.issues %}
+    <li>[{{ issue.severity.value }}] {{ issue.message }}</li>
+    {% endfor %}
+  </ul>
+
+  {% if report.guard %}
+  <h2>Validation technique (guard)</h2>
+  <p>Statut : {{ "OK" if report.guard.passed else "ECHEC" }}</p>
+  <ul>
+    {% for finding in report.guard.findings %}
+    <li>[{{ finding.rule_id }} - {{ finding.severity.value }}] {{ finding.message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</body>
+</html>
+{% endautoescape %}

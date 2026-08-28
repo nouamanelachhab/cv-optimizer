@@ -1,0 +1,14 @@
+- id: skill_bullet
+  text: "Maîtrise de {skill}."
+  slots:
+    skill: skill_label
+
+- id: language_bullet
+  text: "{skill} : niveau courant."
+  slots:
+    skill: skill_label
+
+- id: skills_list_bullet
+  text: "Compétences techniques : {skills}."
+  slots:
+    skills: skill_label_list

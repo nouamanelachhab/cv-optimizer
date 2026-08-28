@@ -1,0 +1,30 @@
+# Environnement virtuel
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Tests / couverture
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# Streamlit
+.streamlit/
+
+# Editeur / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Fichiers de travail ponctuels
+_tmp_*.py
+*_out.txt
+Test offre decathlon.txt
