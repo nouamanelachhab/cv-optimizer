@@ -16,7 +16,7 @@ __pycache__/
 htmlcov/
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
 
 # Editeur / OS
 .vscode/
@@ -27,4 +27,5 @@ Thumbs.db
 # Fichiers de travail ponctuels
 _tmp_*.py
 *_out.txt
+*_out.log
 Test offre decathlon.txt

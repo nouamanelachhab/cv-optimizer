@@ -14,6 +14,11 @@ from collections import Counter
 
 from docx import Document
 
+try:
+    import pymupdf as fitz
+except Exception:  # pragma: no cover - optional for PDF support
+    fitz = None
+
 HEX_RE = re.compile(r'w:(?:color|themeColor)?\s*[^>]*?w:val="([0-9A-Fa-f]{6})"')
 COLOR_ATTR_RE = re.compile(r'w:val="([0-9A-Fa-f]{6})"')
 
@@ -23,8 +28,29 @@ XML_TARGETS = ["word/document.xml", "word/styles.xml", "word/theme/theme1.xml"]
 # --------------------------------------------------------------------------- #
 # Lecture du texte
 # --------------------------------------------------------------------------- #
+def _is_pdf_bytes(data):
+    return isinstance(data, (bytes, bytearray)) and data.startswith(b"%PDF")
+
+
+def _read_pdf_text(pdf_bytes):
+    if fitz is None:
+        raise RuntimeError("PyMuPDF n'est pas installé ; impossible de lire un PDF.")
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    try:
+        parts = []
+        for page in doc:
+            text = page.get_text("text")
+            if text and text.strip():
+                parts.append(text.strip())
+        return "\n".join(parts)
+    finally:
+        doc.close()
+
+
 def read_text(docx_bytes):
-    """Extrait tout le texte du document (paragraphes + tableaux)."""
+    """Extrait tout le texte du document (DOCX ou PDF)."""
+    if _is_pdf_bytes(docx_bytes):
+        return _read_pdf_text(docx_bytes)
     doc = Document(io.BytesIO(docx_bytes))
     parts = [p.text for p in doc.paragraphs]
     for table in doc.tables:
@@ -61,6 +87,8 @@ def _luminance(hx):
 
 def detect_accent_colors(docx_bytes):
     """Retourne les couleurs d'accent du CV, triees par frequence."""
+    if _is_pdf_bytes(docx_bytes):
+        return []
     counter = Counter()
     with zipfile.ZipFile(io.BytesIO(docx_bytes)) as z:
         for name in XML_TARGETS:
@@ -98,6 +126,8 @@ def build_color_mapping(accents, primary_hex, secondary_hex):
 # --------------------------------------------------------------------------- #
 def recolor(docx_bytes, mapping):
     """Remplace les couleurs selon `mapping` ({ancienHex: nouveauHex})."""
+    if _is_pdf_bytes(docx_bytes):
+        return docx_bytes
     if not mapping:
         return docx_bytes
 
@@ -345,6 +375,8 @@ def extract_structure(docx_bytes):
       }
     Les index referencent doc.paragraphs (recharge cote application).
     """
+    if _is_pdf_bytes(docx_bytes):
+        return {"profile": None, "experience_bullets": []}
     doc = Document(io.BytesIO(docx_bytes))
     median_size = _doc_median_font_size(doc)
     section = None
@@ -401,6 +433,14 @@ def assess_format(docx_bytes):
     Dans ce cas, mieux vaut proposer un reformattage intelligent plutot que
     de lancer une analyse ATS qui se baserait sur une structure incertaine.
     """
+    if _is_pdf_bytes(docx_bytes):
+        return {
+            "malformed": False,
+            "reasons": [],
+            "section_categories": set(),
+            "paragraph_count": 0,
+            "heading_count": 0,
+        }
     doc = Document(io.BytesIO(docx_bytes))
     median_size = _doc_median_font_size(doc)
     non_empty = [p for p in doc.paragraphs if p.text.strip()]
@@ -492,6 +532,8 @@ def apply_rewrites(docx_bytes, new_profile=None, bullet_edits=None):
     - bullet_edits : dict {index_paragraphe: nouveau_texte}.
     Conserve la mise en forme (couleurs, puces, tailles) des paragraphes.
     """
+    if _is_pdf_bytes(docx_bytes):
+        return docx_bytes
     doc = Document(io.BytesIO(docx_bytes))
     paras = doc.paragraphs
 

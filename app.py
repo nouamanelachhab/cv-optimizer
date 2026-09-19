@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """CV ATS Optimizer - application Streamlit.
 
-Déposez votre CV Word, collez l'offre d'emploi et saisissez le nom de
-l'entreprise : l'application analyse la compatibilité ATS (hors ligne),
-récupère le logo de l'entreprise pour appliquer sa charte graphique, et
-vous rend un CV .docx prêt à envoyer.
+Déposez votre CV (.docx ou .pdf), collez l'offre d'emploi et saisissez le
+nom de l'entreprise : l'application analyse la compatibilité ATS (hors
+ligne), récupère le logo de l'entreprise pour appliquer sa charte graphique,
+et vous rend un CV prêt à envoyer.
 
 Lancement :  streamlit run app.py
 """
@@ -60,7 +60,7 @@ st.caption(
 
 with st.expander("Comment ça marche ?", expanded=False):
     st.markdown(
-        "1. **Déposez votre CV Word** (.docx).\n"
+        "1. **Déposez votre CV** (.docx ou .pdf).\n"
         "2. **Collez l'offre d'emploi** : l'application extrait les mots-clés "
         "attendus par l'ATS et vérifie s'ils figurent dans votre CV.\n"
         "3. **Saisissez le nom de l'entreprise** (ou l'URL de son site) : "
@@ -75,7 +75,7 @@ with st.expander("Comment ça marche ?", expanded=False):
 # --------------------------------------------------------------------------- #
 col1, col2 = st.columns(2)
 with col1:
-    cv_file = st.file_uploader("Votre CV au format .docx", type=["docx"])
+    cv_file = st.file_uploader("Votre CV (.docx ou .pdf)", type=["docx", "pdf"])
     company = st.text_input(
         "Entreprise ou adresse du site",
         placeholder="ex : Cegedim  ou  https://www.cegedim.fr",
@@ -94,7 +94,7 @@ run = st.button("Analyser le CV", type="primary", use_container_width=True)
 # --------------------------------------------------------------------------- #
 if run:
     if not cv_file:
-        st.error("Veuillez déposer votre CV Word (.docx).")
+        st.error("Veuillez déposer votre CV (.docx ou .pdf).")
         st.stop()
     if not offer_text.strip():
         st.error("Veuillez coller le texte de l'offre d'emploi.")
